@@ -59,39 +59,38 @@
         <button type="submit" name="submit">Submit</button>
     </form>
 
-    <?php
-    // Form submission handling
-    if (isset($_POST['submit'])) {
-        // Capture form data
-        $name = $_POST['name'];
-        $email = $_POST['email'];
+<?php
 
-        // Database connection details
-        $servername = "localhost";
-        $username = "root";
-        $password = ""; // No password
-        $dbname = "wordpress_db";
+require_once 'connection.php';
 
-        // Create a connection
-        $conn = new mysqli($servername, $username, $password, $dbname);
+if (isset($_POST['submit'])) {
+    // Capture form data
+    $name = $_POST['name'];
+    $email = $_POST['email'];
 
-        // Check connection
-        if ($conn->connect_error) {
-            die("Connection failed: " . $conn->connect_error);
-        }
+    try {
+        // Call the dbConnection function
+        $connection = dbConnection();
 
-        // Insert data into the database
-        $sql = "INSERT INTO users (name, email) VALUES ('$name', '$email')";
+        // Prepare and bind statement to avoid SQL injection
+        $stmt = $connection->prepare("INSERT INTO users (name, email) VALUES (?, ?)");
+        $stmt->bind_param("ss", $name, $email);
 
-        if ($conn->query($sql) === TRUE) {
+        // Execute the statement
+        if ($stmt->execute()) {
             echo "<p>Data inserted successfully!</p>";
         } else {
-            echo "<p>Error: " . $sql . "<br>" . $conn->error . "</p>";
+            echo "<p>Error: " . $stmt->error . "</p>";
         }
 
-        // Close the connection
-        $conn->close();
+        // Close the statement and connection
+        $stmt->close();
+        $connection->close();
+    } catch (Exception $e) {
+        echo "<p>Error: " . $e->getMessage() . "</p>";
     }
-    ?>
+}
+?>
+
 </body>
 </html>
